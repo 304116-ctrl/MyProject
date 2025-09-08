@@ -1,0 +1,14 @@
+<!-- ... -->
+<script>
+  function proxyLink() {
+    const url = document.getElementById('url-input').value.trim();
+    if (!url) {
+      alert('Please enter a URL.');
+      return;
+    }
+    // Update route here!
+    const gateBase = window.location.origin + '/api/gate?url=';
+    document.getElementById('proxy-frame').src = gateBase + encodeURIComponent(url);
+  }
+</script>
+<!-- ... -->
