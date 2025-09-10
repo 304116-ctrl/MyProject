@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-  // Get the URL from the query parameter
   const { url } = req.query;
 
   if (!url) {
@@ -8,23 +7,21 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Fetch the requested URL
     const response = await fetch(url);
 
-    // Copy response headers (except some restricted ones)
+    // Copy response headers (ignoring restricted ones)
     for (const [key, value] of response.headers.entries()) {
-      if (key.toLowerCase() !== "content-encoding" && key.toLowerCase() !== "content-length") {
+      if (!['content-encoding', 'content-length'].includes(key.toLowerCase())) {
         res.setHeader(key, value);
       }
     }
-
     // Basic CORS header for iframe use
-    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader('Access-Control-Allow-Origin', '*');
 
-    // Pipe the response body to the client
-    res.status(response.status);
-    response.body.pipe(res);
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    res.status(response.status).end(buffer);
   } catch (err) {
     res.status(500).send('Error fetching URL: ' + err.message);
   }
-}
