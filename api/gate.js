@@ -7,20 +7,26 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Only allow http/https URLs for security
+    if (!/^https?:\/\//i.test(url)) {
+      res.status(400).send('Invalid URL');
+      return;
+    }
+
     const response = await fetch(url);
 
-    // Copy response headers (skip restricted ones)
-    for (const [key, value] of response.headers.entries()) {
-      if (!['content-encoding', 'content-length'].includes(key.toLowerCase())) {
-        res.setHeader(key, value);
-      }
-    }
+    // Get content type, fallback to text/html
+    const contentType = response.headers.get('content-type') || 'text/html';
+    res.setHeader('Content-Type', contentType);
     res.setHeader('Access-Control-Allow-Origin', '*');
 
-    // Read response as text (works for HTML, most resources)
+    // Read as text (safe for HTML and most cases)
     const text = await response.text();
+
     res.status(response.status).send(text);
   } catch (err) {
+    // Log to Vercel logs for debugging
     console.error('Fetch error:', err);
-    res.status(500).send('Error fetching URL: ' + err.message);
+    res.status(500).send('Error fetching URL: ' + (err.message || err.toString()));
   }
+}
