@@ -1,14 +1,88 @@
-<!-- ... -->
-<script>
-  function proxyLink() {
-    const url = document.getElementById('url-input').value.trim();
-    if (!url) {
-      alert('Please enter a URL.');
-      return;
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple Gateway</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      background: #181818;
+      color: #f0f0f0;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
     }
-    // Update route here!
-    const gateBase = window.location.origin + '/api/gate?url=';
-    document.getElementById('proxy-frame').src = gateBase + encodeURIComponent(url);
-  }
-</script>
-<!-- ... -->
+    h1 {
+      color: #4caf50;
+      margin-top: 2em;
+    }
+    .input-group {
+      margin: 2em 0 1em 0;
+      display: flex;
+      gap: 0.5em;
+    }
+    input[type="text"] {
+      padding: 0.5em;
+      font-size: 1em;
+      width: 300px;
+      border: 1px solid #444;
+      border-radius: 4px;
+      background: #232323;
+      color: #f0f0f0;
+    }
+    button {
+      padding: 0.5em 1.5em;
+      font-size: 1em;
+      background: #4caf50;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #388e3c;
+    }
+    iframe {
+      width: 90vw;
+      height: 70vh;
+      border: 2px solid #4caf50;
+      border-radius: 8px;
+      background: #fff;
+    }
+    @media (max-width: 600px) {
+      input[type="text"] {
+        width: 65vw;
+      }
+      iframe {
+        width: 98vw;
+        height: 55vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Simple Gateway</h1>
+  <div class="input-group">
+    <input id="url-input" type="text" placeholder="Enter URL (e.g. https://example.com)">
+    <button onclick="loadUrl()">Go</button>
+  </div>
+  <iframe id="proxy-frame" title="Gateway Output"></iframe>
+  <script>
+    function loadUrl() {
+      const url = document.getElementById('url-input').value.trim();
+      if (!url) {
+        alert('Please enter a URL.');
+        return;
+      }
+      // Use your gate API route here
+      const gateway = '/api/gate?url=' + encodeURIComponent(url);
+      document.getElementById('proxy-frame').src = gateway;
+    }
+  </script>
+</body>
+</html>
