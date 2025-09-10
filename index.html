@@ -2,23 +2,65 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Simple Gateway</title>
+  <title>Gateway with Tabs & Theme Switch</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
+  <style id="theme-style">
+    :root {
+      --bg: #181818;
+      --fg: #f0f0f0;
+      --accent: #1e88e5;
+      --tab-bg: #232f3e;
+      --tab-active: #0d47a1;
+      --input-bg: #232323;
+      --input-fg: #f0f0f0;
+    }
     body {
-      background: #181818;
-      color: #f0f0f0;
+      background: var(--bg);
+      color: var(--fg);
       font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
       min-height: 100vh;
     }
-    h1 {
-      color: #4caf50;
-      margin-top: 2em;
+    .theme-toggle {
+      position: absolute;
+      top: 1em;
+      right: 1em;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 0.5em 1em;
+      cursor: pointer;
+      font-size: 1em;
+      z-index: 2;
+      transition: background 0.2s;
+    }
+    .theme-toggle:hover {
+      background: #0056b3;
+    }
+    .tabs {
+      display: flex;
+      background: var(--tab-bg);
+      border-bottom: 2px solid var(--accent);
+      position: relative;
+    }
+    .tab {
+      padding: 1em 2em;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--fg);
+      font-size: 1em;
+      outline: none;
+      transition: background 0.2s;
+    }
+    .tab.active, .tab:hover {
+      background: var(--tab-active);
+      color: var(--accent);
+    }
+    .tab-content {
+      padding: 1em 2em;
     }
     .input-group {
       margin: 2em 0 1em 0;
@@ -31,13 +73,13 @@
       width: 300px;
       border: 1px solid #444;
       border-radius: 4px;
-      background: #232323;
-      color: #f0f0f0;
+      background: var(--input-bg);
+      color: var(--input-fg);
     }
     button {
       padding: 0.5em 1.5em;
       font-size: 1em;
-      background: #4caf50;
+      background: var(--accent);
       color: #fff;
       border: none;
       border-radius: 4px;
@@ -45,44 +87,177 @@
       transition: background 0.2s;
     }
     button:hover {
-      background: #388e3c;
+      background: #0056b3;
     }
     iframe {
       width: 90vw;
       height: 70vh;
-      border: 2px solid #4caf50;
+      border: 2px solid var(--accent);
       border-radius: 8px;
       background: #fff;
+      display: block;
+      margin: 0 auto 2em auto;
+    }
+    .links-list a {
+      color: var(--accent);
+      display: block;
+      margin: 0.3em 0;
+      text-decoration: underline;
+      cursor: pointer;
+      font-weight: bold;
     }
     @media (max-width: 600px) {
-      input[type="text"] {
-        width: 65vw;
-      }
-      iframe {
-        width: 98vw;
-        height: 55vh;
-      }
+      .tabs { flex-direction: column; }
+      input[type="text"] { width: 65vw; }
+      iframe { width: 98vw; height: 55vh; }
+      .tab-content { padding: 0.5em 0.5em; }
+      .theme-toggle { top: 0.5em; right: 0.5em; }
     }
   </style>
 </head>
 <body>
-  <h1>Simple Gateway</h1>
-  <div class="input-group">
-    <input id="url-input" type="text" placeholder="Enter URL (e.g. https://example.com)">
-    <button onclick="loadUrl()">Go</button>
+  <button class="theme-toggle" onclick="toggleTheme()">Switch Theme</button>
+  <div class="tabs">
+    <button class="tab active" onclick="showTab(0)">NZP.gay</button>
+    <button class="tab" onclick="showTab(1)">Eaglercraft 1.8.8</button>
+    <button class="tab" onclick="showTab(2)">AddictingGames</button>
+    <button class="tab" onclick="showTab(3)">Google</button>
+    <button class="tab" onclick="showTab(4)">Links</button>
   </div>
+  <div id="tab-contents"></div>
   <iframe id="proxy-frame" title="Gateway Output"></iframe>
   <script>
-    function loadUrl() {
-      const url = document.getElementById('url-input').value.trim();
-      if (!url) {
-        alert('Please enter a URL.');
+    // Preset URLs for the tabs
+    const tabSites = [
+      "https://NZP.gay",
+      "https://eaglrcraft.com/mc/1.8.8",
+      "https://www.addictinggames.com",
+      "https://google.com"
+    ];
+
+    // Links for the Links tab
+    const links = [
+      { name: "NZP.gay", url: "https://NZP.gay" },
+      { name: "Eaglercraft 1.8.8", url: "https://eaglrcraft.com/mc/1.8.8" },
+      { name: "AddictingGames", url: "https://www.addictinggames.com" },
+      { name: "Google", url: "https://google.com" },
+      { name: "Eaglercraft.net", url: "https://eaglercraft.net/" }
+    ];
+
+    let currentTab = 0;
+    let darkTheme = true;
+
+    function showTab(tabIndex) {
+      currentTab = tabIndex;
+      document.querySelectorAll('.tab').forEach((tab, idx) => {
+        tab.classList.toggle('active', idx === tabIndex);
+      });
+      const tabContents = document.getElementById('tab-contents');
+      if (tabIndex < 4) {
+        tabContents.innerHTML = `
+          <div class="input-group">
+            <input id="url-input" type="text" value="${tabSites[tabIndex]}" placeholder="Enter URL (e.g. https://example.com)">
+            <button onclick="loadUrl()">Go</button>
+          </div>
+        `;
+        loadUrl(tabSites[tabIndex]);
+      } else {
+        // Links tab
+        tabContents.innerHTML = `
+          <div class="tab-content">
+            <h2>Links</h2>
+            <div class="links-list">
+              ${links.map(link => `<a onclick="loadUrl('${link.url}');">${link.name}</a>`).join('')}
+            </div>
+            <div class="input-group">
+              <input id="url-input" type="text" placeholder="Enter URL (e.g. https://example.com)">
+              <button onclick="loadUrl()">Go</button>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    function loadUrl(url) {
+      url = url || document.getElementById('url-input').value.trim();
+      if (!/^https?:\/\//i.test(url)) {
+        alert('Please enter a valid URL, including https://');
         return;
       }
-      // Use your gate API route here
-      const gateway = '/api/gate?url=' + encodeURIComponent(url);
-      document.getElementById('proxy-frame').src = gateway;
+      document.getElementById('proxy-frame').src = '/api/gate?url=' + encodeURIComponent(url);
     }
+
+    function toggleTheme() {
+      darkTheme = !darkTheme;
+      const style = document.getElementById('theme-style');
+      if (darkTheme) {
+        style.innerHTML = `
+          :root {
+            --bg: #181818;
+            --fg: #f0f0f0;
+            --accent: #1e88e5;
+            --tab-bg: #232f3e;
+            --tab-active: #0d47a1;
+            --input-bg: #232323;
+            --input-fg: #f0f0f0;
+          }
+          body { background: var(--bg); color: var(--fg); font-family: Arial, sans-serif; margin: 0; padding: 0; min-height: 100vh; }
+          .theme-toggle { position: absolute; top: 1em; right: 1em; background: var(--accent); color: #fff; border: none; border-radius: 4px; padding: 0.5em 1em; cursor: pointer; font-size: 1em; z-index: 2; transition: background 0.2s; }
+          .theme-toggle:hover { background: #0056b3; }
+          .tabs { display: flex; background: var(--tab-bg); border-bottom: 2px solid var(--accent); position: relative; }
+          .tab { padding: 1em 2em; cursor: pointer; border: none; background: none; color: var(--fg); font-size: 1em; outline: none; transition: background 0.2s; }
+          .tab.active, .tab:hover { background: var(--tab-active); color: var(--accent); }
+          .tab-content { padding: 1em 2em; }
+          .input-group { margin: 2em 0 1em 0; display: flex; gap: 0.5em; }
+          input[type="text"] { padding: 0.5em; font-size: 1em; width: 300px; border: 1px solid #444; border-radius: 4px; background: var(--input-bg); color: var(--input-fg); }
+          button { padding: 0.5em 1.5em; font-size: 1em; background: var(--accent); color: #fff; border: none; border-radius: 4px; cursor: pointer; transition: background 0.2s; }
+          button:hover { background: #0056b3; }
+          iframe { width: 90vw; height: 70vh; border: 2px solid var(--accent); border-radius: 8px; background: #fff; display: block; margin: 0 auto 2em auto; }
+          .links-list a { color: var(--accent); display: block; margin: 0.3em 0; text-decoration: underline; cursor: pointer; font-weight: bold; }
+          @media (max-width: 600px) {
+            .tabs { flex-direction: column; }
+            input[type="text"] { width: 65vw; }
+            iframe { width: 98vw; height: 55vh; }
+            .tab-content { padding: 0.5em 0.5em; }
+            .theme-toggle { top: 0.5em; right: 0.5em; }
+          }
+        `;
+      } else {
+        style.innerHTML = `
+          :root {
+            --bg: #f8faff;
+            --fg: #191c1f;
+            --accent: #1976d2;
+            --tab-bg: #e3e9f3;
+            --tab-active: #90caf9;
+            --input-bg: #f5faff;
+            --input-fg: #191c1f;
+          }
+          body { background: var(--bg); color: var(--fg); font-family: Arial, sans-serif; margin: 0; padding: 0; min-height: 100vh; }
+          .theme-toggle { position: absolute; top: 1em; right: 1em; background: var(--accent); color: #fff; border: none; border-radius: 4px; padding: 0.5em 1em; cursor: pointer; font-size: 1em; z-index: 2; transition: background 0.2s; }
+          .theme-toggle:hover { background: #0d47a1; }
+          .tabs { display: flex; background: var(--tab-bg); border-bottom: 2px solid var(--accent); position: relative; }
+          .tab { padding: 1em 2em; cursor: pointer; border: none; background: none; color: var(--fg); font-size: 1em; outline: none; transition: background 0.2s; }
+          .tab.active, .tab:hover { background: var(--tab-active); color: var(--accent); }
+          .tab-content { padding: 1em 2em; }
+          .input-group { margin: 2em 0 1em 0; display: flex; gap: 0.5em; }
+          input[type="text"] { padding: 0.5em; font-size: 1em; width: 300px; border: 1px solid #444; border-radius: 4px; background: var(--input-bg); color: var(--input-fg); }
+          button { padding: 0.5em 1.5em; font-size: 1em; background: var(--accent); color: #fff; border: none; border-radius: 4px; cursor: pointer; transition: background 0.2s; }
+          button:hover { background: #0d47a1; }
+          iframe { width: 90vw; height: 70vh; border: 2px solid var(--accent); border-radius: 8px; background: #fff; display: block; margin: 0 auto 2em auto; }
+          .links-list a { color: var(--accent); display: block; margin: 0.3em 0; text-decoration: underline; cursor: pointer; font-weight: bold; }
+          @media (max-width: 600px) {
+            .tabs { flex-direction: column; }
+            input[type="text"] { width: 65vw; }
+            iframe { width: 98vw; height: 55vh; }
+            .tab-content { padding: 0.5em 0.5em; }
+            .theme-toggle { top: 0.5em; right: 0.5em; }
+          }
+        `;
+      }
+    }
+
+    // Initialize
+    showTab(0);
   </script>
 </body>
-</html>
